@@ -62,7 +62,7 @@ async def main():
 
     download_sheet("mods")
 
-    df = pd.read_excel("google_table/tables/mods.xlsx", sheet_name="Лист1")
+    df = pd.read_excel("mods.xlsx", sheet_name="Лист1")
 
     if not os.path.isdir(DOWNLOAD_PATH):
         os.mkdir(DOWNLOAD_PATH)
