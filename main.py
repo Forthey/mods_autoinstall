@@ -68,7 +68,7 @@ async def main():
         os.mkdir(DOWNLOAD_PATH)
 
     for index, row in df.iterrows():
-        if int(index) < 4:
+        if not str(row.get("client-url")).startswith("https://"):
             continue
 
         result: bool = True
