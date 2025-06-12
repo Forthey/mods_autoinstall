@@ -47,11 +47,14 @@ async def main():
     for index, row in df.iterrows():
         if int(index) < 4:
             continue
-        mod_url = row.get("client-url")
-        mod_name = row.get("client-name")
 
-        download_link = await modrinth_requests.get_download_link(mod_url.split("/")[-1], "neoforge", MINECRAFT_VERSION)
-        await download_file(mod_name, "client", download_link)
+        if settings.DOWNLOAD_CLIENT:
+            mod_url = row.get("client-url")
+            mod_name = row.get("client-name")
+
+            download_link = await modrinth_requests.get_download_link(mod_url.split("/")[-1], "neoforge",
+                                                                      MINECRAFT_VERSION)
+            await download_file(mod_name, "client", download_link)
 
         if settings.DOWNLOAD_SERVER:
             mod_url = row.get("server-url")

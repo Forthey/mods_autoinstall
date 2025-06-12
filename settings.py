@@ -8,8 +8,9 @@ class Settings(BaseSettings):
 
     DOWNLOAD_PATH: str
 
-    DOWNLOAD_SERVER: bool
+    DOWNLOAD_CLIENT: bool
 
+    DOWNLOAD_SERVER: bool
 
     model_config = SettingsConfigDict(env_file=".env")
 
