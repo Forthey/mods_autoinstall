@@ -53,11 +53,13 @@ async def main():
         download_link = await modrinth_requests.get_download_link(mod_url.split("/")[-1], "neoforge", MINECRAFT_VERSION)
         await download_file(mod_name, "client", download_link)
 
-        mod_url = row.get("server-url")
-        mod_name = row.get("server-name")
+        if settings.DOWNLOAD_SERVER:
+            mod_url = row.get("server-url")
+            mod_name = row.get("server-name")
 
-        download_link = await modrinth_requests.get_download_link(mod_url.split("/")[-1], "neoforge", MINECRAFT_VERSION)
-        await download_file(mod_name, "server", download_link)
+            download_link = await modrinth_requests.get_download_link(mod_url.split("/")[-1], "neoforge",
+                                                                      MINECRAFT_VERSION)
+            await download_file(mod_name, "server", download_link)
 
     os.remove("mods.xlsx")
 
