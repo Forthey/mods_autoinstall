@@ -79,7 +79,7 @@ async def main():
         if result and get_setting().DOWNLOAD_SERVER:
             await download_file_mode("server")
 
-    os.remove("google_table/tables/mods.xlsx")
+    os.remove("mods.xlsx")
 
 
 if __name__ == "__main__":
