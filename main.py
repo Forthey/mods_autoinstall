@@ -5,12 +5,13 @@ import aiohttp
 import pandas as pd
 from tqdm import tqdm
 
-import modrinth_requests
-from download_sheet import download_sheet
-from settings import settings
+from google_table import download_sheet
+from modr_requests import get_download_link
+from settings import get_setting
 
-MINECRAFT_VERSION = settings.MINECRAFT_VERSION
-DOWNLOAD_PATH = os.path.realpath(settings.DOWNLOAD_PATH)
+
+MINECRAFT_VERSION = get_setting().MINECRAFT_VERSION
+DOWNLOAD_PATH = os.path.realpath(get_setting().DOWNLOAD_PATH)
 
 
 async def download_file(name: str, folder: str, url: str):
@@ -30,41 +31,56 @@ async def download_file(name: str, folder: str, url: str):
                 async for chunk in response.content.iter_chunked(8192):
                     f.write(chunk)
                     pbar.update(len(chunk))
-            print(f"✅ Downloaded: {path}")
+    
+
+    print(f"✅ Downloaded: {path}")
 
 
 async def main():
+    def check_dir(path: str):
+        if os.path.isdir(path):
+            return
+        
+        os.mkdir(path)
+
+
+    async def download_file_mode(mode: str) -> bool:
+        mod_url: str = str(row.get(f"{mode}-url"))
+        mod_name: str = str(row.get(f"{mode}-name"))
+
+        check_dir(f"{DOWNLOAD_PATH}/{mode}")
+        
+        try:
+            download_link = await get_download_link(mod_url.split("/")[-1], "neoforge", MINECRAFT_VERSION)
+        except Exception as error:
+            print(f"❌ DID NOT downloaded: {mod_name}: {error}")
+            return False
+
+        await download_file(mod_name, mode, download_link)
+        
+        return True
+
     download_sheet("mods")
 
-    df = pd.read_excel('mods.xlsx', sheet_name='Лист1')
+    df = pd.read_excel("google_table/tables/mods.xlsx", sheet_name="Лист1")
 
-    try:
-        os.mkdir("client")
-        os.mkdir("server")
-    except FileExistsError:
-        pass
+    if not os.path.isdir(DOWNLOAD_PATH):
+        os.mkdir(DOWNLOAD_PATH)
 
     for index, row in df.iterrows():
         if int(index) < 4:
             continue
 
-        if settings.DOWNLOAD_CLIENT:
-            mod_url = row.get("client-url")
-            mod_name = row.get("client-name")
+        result: bool = True
 
-            download_link = await modrinth_requests.get_download_link(mod_url.split("/")[-1], "neoforge",
-                                                                      MINECRAFT_VERSION)
-            await download_file(mod_name, "client", download_link)
+        if get_setting().DOWNLOAD_CLIENT:
+            result = await download_file_mode("client")
 
-        if settings.DOWNLOAD_SERVER:
-            mod_url = row.get("server-url")
-            mod_name = row.get("server-name")
+        if result and get_setting().DOWNLOAD_SERVER:
+            await download_file_mode("server")
 
-            download_link = await modrinth_requests.get_download_link(mod_url.split("/")[-1], "neoforge",
-                                                                      MINECRAFT_VERSION)
-            await download_file(mod_name, "server", download_link)
-
-    os.remove("mods.xlsx")
+    os.remove("google_table/tables/mods.xlsx")
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

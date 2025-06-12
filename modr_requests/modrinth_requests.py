@@ -1,17 +1,6 @@
-from datetime import datetime
-
 import aiohttp
-from pydantic import BaseModel
 
-
-class FileData(BaseModel):
-    url: str
-
-
-class Version(BaseModel):
-    id: str
-    date_published: datetime
-    files: list[FileData]
+from .models import Version
 
 
 async def fetch_data(url: str, params: dict[str, any]):
@@ -31,5 +20,8 @@ async def get_download_link(name: str, mod_loader: str, version: str) -> str:
 
     versions: list[Version] = [Version.model_validate(ver) for ver in response]
     versions = sorted(versions, key=lambda ver: ver.date_published, reverse=True)
+
+    if not versions:
+        raise IndexError(f"No available versions for mode {name} was found!")
 
     return versions[0].files[0].url
