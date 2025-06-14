@@ -68,15 +68,12 @@ async def main():
         os.mkdir(DOWNLOAD_PATH)
 
     for index, row in df.iterrows():
-        if not str(row.get("client-url")).startswith("https://"):
-            continue
-
         result: bool = True
 
-        if get_setting().DOWNLOAD_CLIENT:
+        if get_setting().DOWNLOAD_CLIENT and str(row.get("client-url")).startswith("https://"):
             result = await download_file_mode("client")
 
-        if result and get_setting().DOWNLOAD_SERVER:
+        if result and get_setting().DOWNLOAD_SERVER and str(row.get("server-url")).startswith("https://"):
             await download_file_mode("server")
 
     os.remove("mods.xlsx")
