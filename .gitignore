@@ -5,6 +5,7 @@ build
 .idea
 __pycache__
 *.xlsx
+*.csv
 client
 server
 result
