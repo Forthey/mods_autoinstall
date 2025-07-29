@@ -1,6 +1,6 @@
 from models.singleton import singleton
 from schemas.modrinth import Version
-from .mods_service import ModsService
+from .mods_service import ModsService, DownloadFileInfo
 
 
 @singleton
@@ -11,7 +11,7 @@ class ModrinthService(ModsService):
             api_base_url="https://api.modrinth.com/v2"
         )
 
-    async def get_download_link(self, name: str, mod_loader: str, version: str) -> str:
+    async def get_download_file_info(self, name: str, mod_loader: str, version: str) -> DownloadFileInfo:
         response = await self._fetch_data(
             f"/project/{name}/version",
             {
@@ -29,7 +29,13 @@ class ModrinthService(ModsService):
         if not versions[0].files:
             raise ValueError(f"No files in latest version of {name}")
 
-        return versions[0].files[0].url
+        file = versions[0].files[0]
+
+        return DownloadFileInfo(
+            url=file.url,
+            hash=file.hashes.sha1,
+            hash_algorithm="sha1"
+        )
 
 
 modrinth_service = ModrinthService()

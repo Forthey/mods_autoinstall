@@ -1,16 +1,15 @@
-import asyncio
 from pathlib import Path
 import aiohttp
-from models import singleton
 
+from async_print import async_print
+from file_downloader.i_file_downloader import IFileDownloader
 
-@singleton
-class FileDownloader:
+class FileDownloader(IFileDownloader):
     def __init__(self):
         pass
 
-    async def download(self, name: str, folder: str, url: str):
-        path = Path(f"{folder}/{name}")
+    async def download_file(self, path: str, name: str, url: str):
+        path = Path(f"{path}/{name}")
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 response.raise_for_status()
@@ -18,6 +17,4 @@ class FileDownloader:
                     async for chunk in response.content.iter_chunked(8192):
                         f.write(chunk)
 
-        print(f"✅ Downloaded: {path}")
-
-file_downloader = FileDownloader()
+        await async_print(f"✅ Downloaded: {path}")
