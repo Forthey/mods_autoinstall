@@ -1,6 +1,6 @@
 from config import settings
-from schemas.curseforge import Mod, FileData
-from mods_services.mods_service import ModsService
+from schemas.curseforge import Mod, FileData, FileHash, HashAlgo
+from mods_services.mods_service import ModsService, DownloadFileInfo
 from models.singleton import singleton
 
 
@@ -27,7 +27,7 @@ class CurseForgeService(ModsService):
     async def _fetch_data_with_key(self, url: str, params: dict[str, any]) -> dict[str, any]:
         return await self._fetch_data(url, params, headers={"x-api-key": self.__api_key})
 
-    async def get_download_link(self, name: str, mod_loader: str, version: str):
+    async def get_download_file_info(self, name: str, mod_loader: str, version: str) -> DownloadFileInfo:
         mod_loader_id = self.__mod_loader_name_to_id.get(mod_loader)
         if mod_loader_id is None:
             raise KeyError
@@ -68,7 +68,20 @@ class CurseForgeService(ModsService):
 
         files = sorted(files, key=lambda file: file.file_date, reverse=True)
 
-        return files[0].download_url
+        if len(files[0].file_hashes) == 0:
+            raise ValueError(f"No file hashes in latest version of {name}")
+
+        file_hash_algo: str
+        if files[0].file_hashes[0].algo == HashAlgo.Sha1:
+            file_hash_algo = "sha1"
+        else:
+            file_hash_algo = "md5"
+
+        return DownloadFileInfo(
+            url=files[0].download_url,
+            hash=files[0].file_hashes[0].value,
+            hash_algorithm=file_hash_algo
+        )
 
 
 curseforge_service = CurseForgeService()
